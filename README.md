@@ -1,2 +1,3 @@
 # GalacticCredits
-Galactic Credits (GAC)
+Galactic Credits (GACR)
+www.cryptohit.io
