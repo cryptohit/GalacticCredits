@@ -1,13 +1,13 @@
-var GACR = artifacts.require("./GACR.sol");
 const assert = require('assert');
+const GACR = artifacts.require("./GACR.sol");
 
 contract('GACR', accounts => {
 
     let token;
-    const creator = accounts[0];
+    const cap = new web3.BigNumber('50000000e18');
 
     beforeEach(async () => {
-        token = await GACR.new({ from: creator });
+        token = await GACR.new(cap, { from: accounts[0] });
     });
 
     it('has a name', async function () {
@@ -32,33 +32,37 @@ contract('GACR', accounts => {
 
     describe('mint()', () => {
 
-        const to = accounts[1];
-        const amount = web3.fromWei('500000e18', 'ether');
+        const mint_to = accounts[0];
+        const amount_to = new web3.BigNumber('100000');
+
         let instance = null;
         let result = null;
 
         before(async () => {
             instance = await GACR.deployed();
-            result = await instance.mint(to, amount);
+            result = await instance.mint(mint_to, amount_to);
         });
 
         it('should mint tokens for test', async () => {
             assert(result);
         });
 
-        it('should fire events for Mint and Transfer', async () => {
+        it('should fire events for Mint', async () => {
             assert.equal(result.logs[0].event, 'Mint');
+        });
+
+        it('should fire events for Transfer', async () => {
             assert.equal(result.logs[1].event, 'Transfer');
         });
 
         it('should update total supply of tokens', async () => {
             const totalSupply = await instance.totalSupply.call();
-            assert(totalSupply.eq(amount));
+            assert(totalSupply.eq(new web3.BigNumber('100000')));
         });
 
         it('should update token balance for test', async () => {
-            const balance = await instance.balanceOf.call(accounts[1]);
-            assert(balance.eq(amount));
+            const balance = await instance.balanceOf.call(mint_to);
+            assert(balance.eq(new web3.BigNumber('100000')));
         });
 
     });
@@ -67,31 +71,29 @@ contract('GACR', accounts => {
 
         const account_one = accounts[0];
         const account_two = accounts[1];
-        const amount = web3.fromWei('500000e18', 'ether');
         let instance = null;
-        let result = null;
 
         before(async () => {
             instance = await GACR.deployed();
-            result = await instance.mint(account_one, amount);
         });
 
         it("should send coin correctly", async () => {
 
-            let transferAmt = 10000;
+            let transferAmt = 1000;
 
-            let balance = await instance.balanceOf.call(account_one);
-            let acc_one_before = balance.toNumber();
+            let balance1 = await instance.balanceOf.call(account_one);
+            let balance2 = await instance.balanceOf.call(account_two);
 
-            balance = await instance.balanceOf.call(account_two);
-            let acc_two_before = balance.toNumber();
+            let acc_one_before = balance1.toNumber();
+            let acc_two_before = balance2.toNumber();
+
             await instance.transfer(account_two, transferAmt, {from: account_one});
 
-            balance = await instance.balanceOf.call(account_one);
-            let acc_one_after = balance.toNumber();
+            balance1 = await instance.balanceOf.call(account_one);
+            balance2 = await instance.balanceOf.call(account_two);
 
-            balance = await instance.balanceOf.call(account_two);
-            let acc_two_after = balance.toNumber();
+            let acc_one_after = balance1.toNumber();
+            let acc_two_after = balance2.toNumber();
 
             assert.equal(acc_one_after, acc_one_before - transferAmt, "Token transfer works wrong!");
             assert.equal(acc_two_after, acc_two_before + transferAmt, "Token transfer works wrong!");

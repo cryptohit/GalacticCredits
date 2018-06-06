@@ -2,7 +2,7 @@
   "name": "GalacticCredits",
   "version": "1.0.0",
   "description": "",
-  "main": "truffle-config.js",
+  "main": "truffle.js",
   "directories": {
     "test": "test"
   },
@@ -10,7 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "CryptoHIT Team",
   "license": "ISC",
   "dependencies": {
     "openzeppelin-solidity": "1.9.0",
