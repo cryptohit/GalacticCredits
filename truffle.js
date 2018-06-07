@@ -13,9 +13,9 @@ module.exports = {
         rinkeby: {
             host: "localhost",  // Connect to geth on the specified
             port: 8545,
-            from: "ACCOUNT_ADDRESS",   // default address to use for any transaction Truffle makes during migrations
+            from: "0x32127Bd5FFb16215936f5483015D3d583c105FE9",   // default address to use for any transaction Truffle makes during migrations
             network_id: 4,  // rinkeby network id
-            gas: 4612388    // Gas limit used for deploys
+            gas: 6712390    // Gas limit used for deploys
         },
         live: {
             host: "localhost",

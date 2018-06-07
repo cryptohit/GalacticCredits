@@ -174,12 +174,28 @@ contract Crowdsale is Ownable {
      * Set new rate
      */
     function setNewRate(uint _newRate) public onlyOwner {
-        require(_newRate != 0);
+        require(_newRate > 0);
         rate = _newRate;
     }
 
     /**
-     * add/remove to whitelist array of addresses based on boolean status
+     * Set hard cap (if rate will be changed)
+     */
+    function setHardCap(uint256 _newCap) public onlyOwner {
+        require(_newCap > 0);
+        cap = _newCap;
+    }
+
+    /**
+     * Set new wallet
+     */
+    function changeWallet(address _newWallet) public onlyOwner {
+        require(_newWallet != address(0));
+        wallet = _newWallet;
+    }
+
+    /**
+     * Add/Remove to whitelist array of addresses based on boolean status
      */
     function updateWhitelist(address[] addresses, bool status) public onlyOwner {
         for (uint256 i = 0; i < addresses.length; i++) {
@@ -203,11 +219,16 @@ contract Crowdsale is Ownable {
 
         emit Finalized();
 
+        // unsold tokens to ecosystem
         uint256 unsoldTokens = tokensForSale - token.totalSupply();
         if (unsoldTokens > 0) {
             tokensForEcosystem = tokensForEcosystem + unsoldTokens;
         }
 
+        // freeze team tokens
+        token.setTeamAddress(_teamFund);
+
+        // finish mint
         token.mint(_bountyFund,tokensForBounty);
         token.mint(_advisorsFund,tokensForAdvisors);
         token.mint(_ecosystemFund,tokensForEcosystem);

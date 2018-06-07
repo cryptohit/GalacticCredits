@@ -7,7 +7,7 @@ module.exports = function(deployer, network, accounts) {
     let wallet = "ACCOUNT_ADDRESS";             // todo: address where funds are collected
 
     if (network == "rinkeby") {
-        wallet    = "ACCOUNT_ADDRESS";          // todo: address where funds are collected
+        wallet    = "0x87b9554120606e202a73d7e0a1722bcadc1b80d9";   // address where funds are collected
     } else if (network == "development") {
         wallet = accounts[9];
 

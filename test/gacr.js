@@ -1,4 +1,3 @@
-const assert = require('assert');
 const GACR = artifacts.require("./GACR.sol");
 
 contract('GACR', accounts => {
@@ -30,6 +29,7 @@ contract('GACR', accounts => {
         assert(cap.eq(new web3.BigNumber('50000000e18')));
     });
 
+    /*
     describe('mint()', () => {
 
         const mint_to = accounts[0];
@@ -99,5 +99,71 @@ contract('GACR', accounts => {
             assert.equal(acc_two_after, acc_two_before + transferAmt, "Token transfer works wrong!");
         });
 
+    });*/
+
+    describe('freeze for team', () => {
+        const team = accounts[6];
+        const to = accounts[7];
+        const spender = accounts[8];
+
+        let instance = null;
+
+        before(async () => {
+            instance = await GACR.deployed();
+            await instance.mint(team, new web3.BigNumber('100000'));
+        });
+
+        it("can transfer when team address is empty", async () => {
+            const amount = 100;
+            let balance_before = await instance.balanceOf.call(to);
+            balance_before = balance_before.toNumber();
+
+            await instance.transfer(to, amount, {from: team});
+            let balance_after = await instance.balanceOf.call(to);
+            balance_after = balance_after.toNumber();
+
+            assert.equal(balance_after, balance_before + amount, "Token transfer works wrong!");
+        });
+
+        it("can transferFrom when team address is empty", async () => {
+            const amount = 100;
+            let balance_before = await instance.balanceOf(to);
+            balance_before = balance_before.toNumber();
+
+            await instance.approve(spender, amount, { from: team });
+            await instance.transferFrom(team, to, amount, { from: spender });
+
+            let balance_after = await instance.balanceOf(to);
+            balance_after = balance_after.toNumber();
+
+            assert.equal(balance_after, balance_before + amount, "Token transfer works wrong!");
+        });
+
+        it("cannot transfer when team address is fill", async () => {
+            const amount = 100;
+            await instance.setTeamAddress(team);
+
+            try {
+                await instance.transfer(to, amount, {from: team});
+                assert.fail('should have thrown before');
+            } catch (error) {
+                assert.isAbove(error.message.search('revert'), -1, error.message);
+            }
+        });
+
+        it("cannot transferFrom when team address is fill", async () => {
+            const amount = 100;
+            await instance.setTeamAddress(team);
+            await instance.approve(spender, amount, { from: team });
+
+            try {
+                await instance.transferFrom(team, to, amount, { from: spender });
+                assert.fail('should have thrown before');
+            } catch (error) {
+                assert.isAbove(error.message.search('revert'), -1, error.message);
+            }
+        });
+
     });
+
 });
