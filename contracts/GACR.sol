@@ -9,6 +9,8 @@ contract GACR is CappedToken {
 
     address public teamFund; // team wallet address
 
+    event Burn(address indexed burner, uint256 value);
+
     constructor(uint256 _cap) public CappedToken(_cap) {}
 
     /**
@@ -41,5 +43,19 @@ contract GACR is CappedToken {
      */
     function transferFrom(address _from, address _to, uint256 _value) canTransfer(_from) returns (bool) {
         super.transferFrom(_from, _to, _value);
+    }
+
+    /**
+     * @dev Burns a specific amount of tokens.
+     * @param _value The amount of token to be burned.
+     */
+    function burn(uint256 _value) public {
+        address _who = msg.sender;
+        require(_value <= balances[_who]);
+
+        balances[_who] = balances[_who].sub(_value);
+        totalSupply_ = totalSupply_.sub(_value);
+        emit Burn(_who, _value);
+        emit Transfer(_who, address(0), _value);
     }
 }

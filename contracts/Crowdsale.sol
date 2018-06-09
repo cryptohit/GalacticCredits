@@ -228,11 +228,13 @@ contract Crowdsale is Ownable {
         // freeze team tokens
         token.setTeamAddress(_teamFund);
 
-        // finish mint
+        // distribute
         token.mint(_bountyFund,tokensForBounty);
         token.mint(_advisorsFund,tokensForAdvisors);
         token.mint(_ecosystemFund,tokensForEcosystem);
         token.mint(_teamFund,tokensForTeam);
+
+        // finish
         token.finishMinting();
     }
 }
