@@ -8,16 +8,20 @@ contract GACR is CappedToken {
     uint8 public decimals   = 18;
 
     address public teamFund; // team wallet address
+    bool public isSetTeamWallet = false;
 
     event Burn(address indexed burner, uint256 value);
 
     constructor(uint256 _cap) public CappedToken(_cap) {}
 
     /**
-     * Set team address
+     * Set team address (only once)
      */
     function setTeamAddress(address _teamFund) public onlyOwner {
+        require(isSetTeamWallet == false);
+
         teamFund = _teamFund;
+        isSetTeamWallet = true;
     }
 
     /**

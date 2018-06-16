@@ -171,7 +171,7 @@ contract Crowdsale is Ownable {
     }
 
     /**
-     * Set new rate
+     * Set new rate (protection from strong volatility)
      */
     function setNewRate(uint _newRate) public onlyOwner {
         require(_newRate > 0);
@@ -179,7 +179,7 @@ contract Crowdsale is Ownable {
     }
 
     /**
-     * Set hard cap (if rate will be changed)
+     * Set hard cap (protection from strong volatility)
      */
     function setHardCap(uint256 _newCap) public onlyOwner {
         require(_newCap > 0);
@@ -219,7 +219,7 @@ contract Crowdsale is Ownable {
 
         emit Finalized();
 
-        // unsold tokens to ecosystem
+        // unsold tokens to ecosystem (perhaps further they will be burnt)
         uint256 unsoldTokens = tokensForSale - token.totalSupply();
         if (unsoldTokens > 0) {
             tokensForEcosystem = tokensForEcosystem + unsoldTokens;
