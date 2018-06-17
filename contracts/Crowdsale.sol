@@ -216,6 +216,10 @@ contract Crowdsale is Ownable {
      * Finish Crowdsale & Mint
      */
     function finish(address _bountyFund, address _advisorsFund, address _ecosystemFund, address _teamFund) public onlyOwner {
+        require(_bountyFund != address(0));
+        require(_advisorsFund != address(0));
+        require(_ecosystemFund != address(0));
+        require(_teamFund != address(0));
 
         emit Finalized();
 
@@ -225,9 +229,6 @@ contract Crowdsale is Ownable {
             tokensForEcosystem = tokensForEcosystem + unsoldTokens;
         }
 
-        // freeze team tokens
-        token.setTeamAddress(_teamFund);
-
         // distribute
         token.mint(_bountyFund,tokensForBounty);
         token.mint(_advisorsFund,tokensForAdvisors);
@@ -236,5 +237,8 @@ contract Crowdsale is Ownable {
 
         // finish
         token.finishMinting();
+
+        // freeze team tokens
+        token.setTeamAddress(_teamFund);
     }
 }
