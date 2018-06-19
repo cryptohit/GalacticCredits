@@ -7,7 +7,6 @@ interface GACR {
     function transfer(address to, uint256 value) external returns (bool);
     function mint(address _to, uint256 _amount) external returns (bool);
     function finishMinting() external returns (bool);
-    function burn(uint256 _value) external;
     function totalSupply() external view returns (uint256);
     function setTeamAddress(address _teamFund) external;
     function transferOwnership(address newOwner) external;
