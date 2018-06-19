@@ -20,7 +20,7 @@ contract Crowdsale is Ownable {
     CrowdsaleStage public stage = CrowdsaleStage.PreICO; // By default it's Pre Sale
 
     // Token distribution
-    uint256 public constant maxTokens           = 50000000*1e18;    // max of GACR tokens
+    //uint256 public constant maxTokens           = 50000000*1e18;    // max of GACR tokens
     uint256 public constant tokensForSale       = 28500000*1e18;    // 57%
     uint256 public constant tokensForBounty     = 1500000*1e18;     // 3%
     uint256 public constant tokensForAdvisors   = 3000000*1e18;     // 6%
