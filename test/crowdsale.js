@@ -49,6 +49,7 @@ contract('Crowdsale', function(accounts) {
             Crowdsale.deployed().then(async function(instance) {
                 const tokenAddress = await instance.token.call();
                 const gacrToken = GACR.at(tokenAddress);
+                await gacrToken.transferOwnership(instance.address, { from: accounts[0] });
                 assert.equal(await gacrToken.owner(), instance.address, 'Crowdsale is not the owner of the token');
                 done();
             });
@@ -342,6 +343,26 @@ contract('Crowdsale', function(accounts) {
         });
     });
 
+    describe('mint', () => {
+
+        it('should mint()', function(done) {
+            Crowdsale.deployed().then(async function(instance) {
+                const tokenAddress = await instance.token.call();
+                const gacrToken = GACR.at(tokenAddress);
+                const balanceBefore = await gacrToken.balanceOf(accounts[0]);
+
+                const mintAmount = new web3.BigNumber('100');
+                await instance.mint(accounts[0], mintAmount, { from: accounts[0] });
+                const balanceAfter = await gacrToken.balanceOf(accounts[0]);
+
+                assert(balanceAfter.eq(balanceBefore+mintAmount));
+
+                done();
+            });
+        });
+
+    });
+
     describe('finalize', () => {
 
         it('the owner could finalize the crowdsale', function(done) {
@@ -350,17 +371,30 @@ contract('Crowdsale', function(accounts) {
                 const tokenAddress = await instance.token.call();
                 const gacrToken = GACR.at(tokenAddress);
 
-                console.log('GACR token supply before   : ' + await gacrToken.totalSupply());
+                //console.log('GACR token supply before   : ' + await gacrToken.totalSupply());
 
                 await instance.finish(accounts[0], accounts[1], accounts[2], accounts[3]);
 
-                console.log('GACR token supply after    : ' + await gacrToken.totalSupply());
-                console.log('BountyFund token supply    : ' + await gacrToken.balanceOf(accounts[0]));
-                console.log('AdvisorsFund token supply  : ' + await gacrToken.balanceOf(accounts[1]));
-                console.log('EcoSystemFund token supply : ' + await gacrToken.balanceOf(accounts[2]));
-                console.log('TeamFund token supply      : ' + await gacrToken.balanceOf(accounts[3]));
+                //console.log('GACR token supply after    : ' + await gacrToken.totalSupply());
+                //console.log('BountyFund token supply    : ' + await gacrToken.balanceOf(accounts[0]));
+                //console.log('AdvisorsFund token supply  : ' + await gacrToken.balanceOf(accounts[1]));
+                //console.log('EcoSystemFund token supply : ' + await gacrToken.balanceOf(accounts[2]));
+                //console.log('TeamFund token supply      : ' + await gacrToken.balanceOf(accounts[3]));
 
                 assert.isTrue(await gacrToken.mintingFinished.call(), 'Mint is not finished');
+                done();
+            });
+        });
+
+        it('should return rights to account', function(done) {
+            Crowdsale.deployed().then(async function(instance) {
+
+                const tokenAddress = await instance.token.call();
+                const gacrToken = GACR.at(tokenAddress);
+
+                await instance.returnOwnership({ from: accounts[0] });
+                assert.equal(await gacrToken.owner(), accounts[0]);
+
                 done();
             });
         });

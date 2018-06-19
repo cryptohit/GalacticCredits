@@ -29,7 +29,6 @@ contract('GACR', accounts => {
         assert(cap.eq(new web3.BigNumber('50000000e18')));
     });
 
-    /*
     describe('mint()', () => {
 
         const mint_to = accounts[0];
@@ -67,6 +66,42 @@ contract('GACR', accounts => {
 
     });
 
+    describe('burn()', () => {
+        const account = accounts[0];
+        const burnAmount = new web3.BigNumber('2000');
+
+        let instance = null;
+        let result = null;
+        let balanceBefore = null;
+        let totalSupplyBefore = null;
+
+        before(async () => {
+            instance = await GACR.deployed();
+            balanceBefore = await instance.balanceOf.call(account);
+            totalSupplyBefore = await instance.totalSupply.call();
+            result = await instance.burn(burnAmount);
+        });
+
+        it('should fire events for Burn', async () => {
+            assert.equal(result.logs[0].event, 'Burn');
+        });
+
+        it('should fire events for Transfer', async () => {
+            assert.equal(result.logs[1].event, 'Transfer');
+        });
+
+        it('should update total supply of tokens', async () => {
+            const totalSupplyAfter = await instance.totalSupply.call();
+            assert(totalSupplyAfter.eq(totalSupplyBefore-burnAmount));
+        });
+
+        it('should burn token', async () => {
+            const balance = await instance.balanceOf.call(account);
+            assert(balance.eq(balanceBefore-burnAmount));
+        });
+
+    });
+
     describe('send()', () => {
 
         const account_one = accounts[0];
@@ -99,9 +134,27 @@ contract('GACR', accounts => {
             assert.equal(acc_two_after, acc_two_before + transferAmt, "Token transfer works wrong!");
         });
 
-    });*/
+    });
 
-    describe('freeze for team', () => {
+    describe('revert()', () => {
+        let instance = null;
+
+        before(async () => {
+            instance = await GACR.deployed();
+        });
+
+        it('should revert any transaction', async () => {
+            try {
+                await instance.sendTransaction({ from: accounts[0], value: web3.toWei(1, "ether")});
+                assert.fail('should have thrown before');
+            } catch (error) {
+                assert.isAbove(error.message.search('revert'), -1, error.message);
+            }
+        });
+
+    });
+
+    describe('freeze()', () => {
         const team = accounts[6];
         const to = accounts[7];
         const spender = accounts[8];
@@ -153,7 +206,7 @@ contract('GACR', accounts => {
 
         it("cannot transferFrom when team address is fill", async () => {
             const amount = 100;
-            await instance.setTeamAddress(team);
+            //await instance.setTeamAddress(team);
             await instance.approve(spender, amount, { from: team });
 
             try {
@@ -162,6 +215,37 @@ contract('GACR', accounts => {
             } catch (error) {
                 assert.isAbove(error.message.search('revert'), -1, error.message);
             }
+        });
+
+    });
+
+    describe('finishMinting()', () => {
+
+        const account = accounts[0];
+
+        let instance = null;
+        let balanceBefore = null;
+
+        before(async () => {
+            instance = await GACR.deployed();
+            balanceBefore = await instance.balanceOf.call(account);
+            instance.finishMinting();
+        });
+
+        it("cannot mint() after finish", async () => {
+            try {
+                await instance.mint(account, new web3.BigNumber('100'));
+                assert.fail('should have thrown before');
+            } catch (error) {
+                assert.isAbove(error.message.search('revert'), -1, error.message);
+            }
+        });
+
+        it('should burn() after finish', async () => {
+            const burnAmount = new web3.BigNumber('100');
+            await instance.burn(burnAmount);
+            const balance = await instance.balanceOf.call(account);
+            assert(balance.eq(balanceBefore-burnAmount));
         });
 
     });

@@ -1,7 +1,12 @@
 pragma solidity ^0.4.21;
-import "zeppelin-solidity/contracts/token/ERC20/CappedToken.sol";
 
-contract GACR is CappedToken {
+import "zeppelin-solidity/contracts/token/ERC20/CappedToken.sol";
+import "zeppelin-solidity/contracts/token/ERC20/BurnableToken.sol";
+
+/**
+ * @title GACR token
+ */
+contract GACR is CappedToken, BurnableToken {
 
     string public name      = "Galactic Credits";
     string public symbol    = "GACR";
@@ -10,12 +15,13 @@ contract GACR is CappedToken {
     address public teamFund; // team wallet address
     bool public isSetTeamWallet = false;
 
-    event Burn(address indexed burner, uint256 value);
-
+    /**
+     * @param _cap token cap for GACR
+     */
     constructor(uint256 _cap) public CappedToken(_cap) {}
 
     /**
-     * Set team address (only once)
+     * @dev Set team address (only once)
      */
     function setTeamAddress(address _teamFund) public onlyOwner {
         require(isSetTeamWallet == false);
@@ -25,7 +31,7 @@ contract GACR is CappedToken {
     }
 
     /**
-     * Tokens for team will be frozen for a period of 6 months after end ICO
+     * @dev Tokens for team will be frozen for a period of 6 months after end ICO
      * Note: timestamp 1539169200 is equal 2018-10-10T11:00:00
      */
     modifier canTransfer (address sender) {
@@ -36,30 +42,23 @@ contract GACR is CappedToken {
     }
 
     /**
-     * Overridden
+     * @dev Overridden for check canTransfer
      */
-    function transfer(address _to, uint256 _value) canTransfer(msg.sender) returns (bool) {
-        super.transfer(_to, _value);
+    function transfer(address _to, uint256 _value) public canTransfer(msg.sender) returns (bool) {
+        return super.transfer(_to, _value);
     }
 
     /**
-     * Overridden
+     * @dev Overridden for check canTransfer
      */
-    function transferFrom(address _from, address _to, uint256 _value) canTransfer(_from) returns (bool) {
-        super.transferFrom(_from, _to, _value);
+    function transferFrom(address _from, address _to, uint256 _value) public canTransfer(_from) returns (bool) {
+        return super.transferFrom(_from, _to, _value);
     }
 
     /**
-     * @dev Burns a specific amount of tokens.
-     * @param _value The amount of token to be burned.
+     * @dev Fallback function
      */
-    function burn(uint256 _value) public {
-        address _who = msg.sender;
-        require(_value <= balances[_who]);
-
-        balances[_who] = balances[_who].sub(_value);
-        totalSupply_ = totalSupply_.sub(_value);
-        emit Burn(_who, _value);
-        emit Transfer(_who, address(0), _value);
+    function() public payable {
+        revert();
     }
 }

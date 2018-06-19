@@ -1,7 +1,17 @@
 pragma solidity ^0.4.21;
 
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
-import "./GACR.sol";
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+
+interface GACR {
+    function transfer(address to, uint256 value) external returns (bool);
+    function mint(address _to, uint256 _amount) external returns (bool);
+    function finishMinting() external returns (bool);
+    function burn(uint256 _value) external;
+    function totalSupply() external view returns (uint256);
+    function setTeamAddress(address _teamFund) external;
+    function transferOwnership(address newOwner) external;
+}
 
 contract Crowdsale is Ownable {
     using SafeMath for uint256;
@@ -23,7 +33,7 @@ contract Crowdsale is Ownable {
     uint256 endTime     = 1539169200;   // 2018-10-10T11:00:00
 
     // The token being sold
-    GACR public token = new GACR(maxTokens);
+    GACR public token;
 
     // Address where funds are collected
     address public wallet;
@@ -50,14 +60,14 @@ contract Crowdsale is Ownable {
     event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
 
     /**
-     * Event for whitelist update
+     * @dev Event for whitelist update
      * @param purchaser who add to whitelist
      * @param status of purchased for whitelist
      */
     event WhitelistUpdate(address indexed purchaser, bool status);
 
     /**
-     * Event for crowdsale finalize
+     * @dev Event for crowdsale finalize
      */
     event Finalized();
 
@@ -66,7 +76,7 @@ contract Crowdsale is Ownable {
      * @param _rate Number of token units a buyer gets per wei
      * @param _wallet Address where collected funds will be forwarded to
      */
-    constructor(uint256 _cap, uint256 _rate, address _wallet) public {
+    constructor(uint256 _cap, uint256 _rate, address _wallet, address _token) public {
         require(_cap > 0);
         require(_rate > 0);
         require(_wallet != address(0));
@@ -74,10 +84,11 @@ contract Crowdsale is Ownable {
         cap = _cap;
         rate = _rate;
         wallet = _wallet;
+        token = GACR(_token);
     }
 
     /**
-     * Check that sale is on
+     * @dev Check that sale is on
      */
     modifier saleIsOn() {
         require(now > startTime && now < endTime);
@@ -91,7 +102,7 @@ contract Crowdsale is Ownable {
     //}
 
     /**
-     * Buy tokens
+     * @dev Buy tokens
      */
     function buyTokens(address _beneficiary) saleIsOn public payable {
         uint256 _weiAmount = msg.value;
@@ -149,12 +160,15 @@ contract Crowdsale is Ownable {
         wallet.transfer(_weiAmount);
     }
 
+    /**
+     * @dev Payable function
+     */
     function () external payable {
         buyTokens(msg.sender);
     }
 
     /**
-     * Change Crowdsale Stage.
+     * @dev Change Crowdsale Stage.
      * Options: PreICO, ICO
      */
     function setCrowdsaleStage(uint value) public onlyOwner {
@@ -171,7 +185,7 @@ contract Crowdsale is Ownable {
     }
 
     /**
-     * Set new rate (protection from strong volatility)
+     * @dev Set new rate (protection from strong volatility)
      */
     function setNewRate(uint _newRate) public onlyOwner {
         require(_newRate > 0);
@@ -179,7 +193,7 @@ contract Crowdsale is Ownable {
     }
 
     /**
-     * Set hard cap (protection from strong volatility)
+     * @dev Set hard cap (protection from strong volatility)
      */
     function setHardCap(uint256 _newCap) public onlyOwner {
         require(_newCap > 0);
@@ -187,7 +201,7 @@ contract Crowdsale is Ownable {
     }
 
     /**
-     * Set new wallet
+     * @dev Set new wallet
      */
     function changeWallet(address _newWallet) public onlyOwner {
         require(_newWallet != address(0));
@@ -195,7 +209,7 @@ contract Crowdsale is Ownable {
     }
 
     /**
-     * Add/Remove to whitelist array of addresses based on boolean status
+     * @dev Add/Remove to whitelist array of addresses based on boolean status
      */
     function updateWhitelist(address[] addresses, bool status) public onlyOwner {
         for (uint256 i = 0; i < addresses.length; i++) {
@@ -206,14 +220,28 @@ contract Crowdsale is Ownable {
     }
 
     /**
-     * Check that address is exist in whitelist
+     * @dev Check that address is exist in whitelist
      */
     function isWhitelisted(address contributor) public constant returns (bool) {
         return whitelist[contributor];
     }
 
     /**
-     * Finish Crowdsale & Mint
+     * @dev Function to mint tokens
+     */
+    function mint(address _to, uint256 _amount) onlyOwner public returns (bool) {
+        return token.mint(_to, _amount);
+    }
+
+    /**
+     * @dev Return ownership to previous owner
+     */
+    function returnOwnership() onlyOwner public returns (bool) {
+        token.transferOwnership(owner);
+    }
+
+    /**
+     * @dev Finish Crowdsale
      */
     function finish(address _bountyFund, address _advisorsFund, address _ecosystemFund, address _teamFund) public onlyOwner {
         require(_bountyFund != address(0));
